@@ -1,69 +1,213 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React, { useState, useEffect, useCallback } from 'react';
+import { StudioMode, PromptEngineResponse, HistoryItem } from '@/types/prompt';
+import { Header } from '@/components/navigation/Header';
+import { SettingsModal } from '@/components/navigation/SettingsModal';
+import { ImagePromptWorkspace } from '@/components/studio/ImagePromptWorkspace';
+import { VideoPromptWorkspace } from '@/components/studio/VideoPromptWorkspace';
+import { PromptHistoryDrawer } from '@/components/history/PromptHistoryDrawer';
+import {
+  loadHistory,
+  savePromptToHistory,
+  deleteHistoryItem,
+  clearAllHistory,
+} from '@/lib/storage/history-store';
+import { Sparkles, Info, ArrowRight } from 'lucide-react';
+
+export default function PromptHubPage() {
+  const [mode, setMode] = useState<StudioMode>('image');
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // History State
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  // Active Outputs for each mode
+  const [imagePromptResponse, setImagePromptResponse] =
+    useState<PromptEngineResponse | null>(null);
+  const [videoPromptResponse, setVideoPromptResponse] =
+    useState<PromptEngineResponse | null>(null);
+
+  // API Status State
+  const [apiStatus, setApiStatus] = useState({
+    configured: false,
+    hasServerKey: false,
+    hasCustomKey: false,
+    model: 'gemma-4-26b-a4b-it',
+  });
+
+  // Fetch API status on mount & settings change
+  const refreshApiStatus = useCallback(async () => {
+    try {
+      const headers: Record<string, string> = {};
+      if (typeof window !== 'undefined') {
+        const customKey = localStorage.getItem('aisha_custom_gemini_key');
+        const customModel = localStorage.getItem('aisha_custom_gemini_model');
+        if (customKey) headers['x-gemini-api-key'] = customKey;
+        if (customModel) headers['x-gemini-model'] = customModel;
+      }
+
+      const res = await fetch('/api/status', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setApiStatus({
+          configured: data.configured,
+          hasServerKey: data.hasServerKey,
+          hasCustomKey: data.hasCustomKey,
+          model: data.model || 'gemma-4-26b-a4b-it',
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch API status:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    setHistory(loadHistory());
+    refreshApiStatus();
+  }, [refreshApiStatus]);
+
+  // Handler when a new prompt is generated
+  const handlePromptGenerated = (
+    response: PromptEngineResponse,
+    creativeDirection: string,
+    thumbnail?: string
+  ) => {
+    const updated = savePromptToHistory(mode, response, creativeDirection, thumbnail);
+    setHistory(updated);
+  };
+
+  // Handler when a prompt is loaded from history
+  const handleSelectFromHistory = (item: HistoryItem) => {
+    setMode(item.mode);
+    const restoredResponse: PromptEngineResponse = {
+      prompt: item.prompt,
+      quality_score: item.quality_score,
+      analysis: {
+        summary: item.summary,
+      },
+      tags: item.tags,
+    };
+
+    if (item.mode === 'image') {
+      setImagePromptResponse(restoredResponse);
+    } else {
+      setVideoPromptResponse(restoredResponse);
+    }
+  };
+
+  const handleDeleteHistoryItem = (id: string) => {
+    const updated = deleteHistoryItem(id);
+    setHistory(updated);
+  };
+
+  const handleClearHistory = () => {
+    clearAllHistory();
+    setHistory([]);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div
+      className={`min-h-screen flex flex-col transition-colors duration-500 ${
+        mode === 'image' ? 'studio-glow-image' : 'studio-glow-video'
+      }`}
+    >
+      {/* Top Navigation */}
+      <Header
+        mode={mode}
+        onModeChange={setMode}
+        onOpenHistory={() => setIsHistoryOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        historyCount={history.length}
+        apiStatus={apiStatus}
+      />
+
+      {/* Main Studio Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Banner Explainer Bar */}
+        <div className="mb-6 p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-md backdrop-blur-md">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <Info className="w-4 h-4" />
+            </div>
+            <p className="text-zinc-300">
+              <span className="font-semibold text-zinc-100">AI Prompt Engineering Lab:</span>{' '}
+              This platform designs structured prompts for external generators (ChatGPT Images, Gemini Imagen, & Gemini Veo).
+            </p>
+          </div>
+
+          {!apiStatus.configured && (
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 font-semibold transition-colors"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <span>Setup API Key</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        {/* Studio Workspace */}
+        {mode === 'image' ? (
+          <ImagePromptWorkspace
+            onPromptGenerated={handlePromptGenerated}
+            activePromptResponse={imagePromptResponse}
+            setActivePromptResponse={setImagePromptResponse}
+          />
+        ) : (
+          <VideoPromptWorkspace
+            onPromptGenerated={handlePromptGenerated}
+            activePromptResponse={videoPromptResponse}
+            setActivePromptResponse={setVideoPromptResponse}
+          />
+        )}
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-zinc-900 bg-zinc-950/80 py-6 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="font-medium text-zinc-400">
+              Aisha Pandit Prompt Hub &mdash; Multimodal AI Visual Engineering
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="hover:text-zinc-300 transition-colors"
+            >
+              Model: <span className="font-mono text-zinc-400">{apiStatus.model}</span>
+            </button>
+            <span>&bull;</span>
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="hover:text-zinc-300 transition-colors"
+            >
+              History ({history.length})
+            </button>
+          </div>
+        </div>
+      </footer>
+
+      {/* History Slide-Over Drawer */}
+      <PromptHistoryDrawer
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        history={history}
+        onSelectPrompt={handleSelectFromHistory}
+        onDeleteItem={handleDeleteHistoryItem}
+        onClearAll={handleClearHistory}
+      />
+
+      {/* Settings & API Key Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        apiStatus={apiStatus}
+        onSettingsSaved={refreshApiStatus}
+      />
     </div>
   );
 }
