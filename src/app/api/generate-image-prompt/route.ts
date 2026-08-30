@@ -14,12 +14,14 @@ export async function POST(req: NextRequest) {
     const {
       modelReference,
       fashionReference,
+      poseReference,
       locationReference,
       creativeDirection,
       controls,
     }: {
       modelReference?: ImageReference;
       fashionReference?: ImageReference;
+      poseReference?: ImageReference | null;
       locationReference?: ImageReference;
       creativeDirection?: string;
       controls?: ImageControls;
@@ -91,13 +93,23 @@ export async function POST(req: NextRequest) {
     contents.push('Use this image as the exact clothing blueprint (garment type, silhouette, fabric texture, cut, drapery, color, styling). Fit this outfit naturally onto the model.');
     contents.push(dataUrlToGenerativePart(fashionReference.dataUrl, fashionReference.mimeType));
 
+    // Pose reference image (Optional — skeleton only)
+    if (poseReference && poseReference.dataUrl) {
+      contents.push('--- REFERENCE 3: POSE / BODY LANGUAGE REFERENCE (PROVIDED — SKELETON ONLY) ---');
+      contents.push('Extract ONLY the skeletal pose structure: joint angles, limb positions, torso torsion, hand placement, foot grounding and weight distribution, spine curvature, gaze vector. IGNORE all identity, facial features, hair, garment, accessories, background and lighting from this image. Do NOT transfer face or clothes from this pose image. Map the Model identity + Fashion garment onto this pose with anatomical rigidity.');
+      contents.push(dataUrlToGenerativePart(poseReference.dataUrl, poseReference.mimeType));
+    } else {
+      contents.push('--- REFERENCE 3: POSE / BODY LANGUAGE REFERENCE ---');
+      contents.push('NOTE: No pose reference was provided. Infer the optimal body language and pose exclusively from the user\'s creative direction and cinematography controls. No pose blueprint to follow.');
+    }
+
     // Location reference image (Optional)
     if (locationReference && locationReference.dataUrl) {
-      contents.push('--- REFERENCE 3: LOCATION / ENVIRONMENT REFERENCE (PROVIDED) ---');
+      contents.push('--- REFERENCE 4: LOCATION / ENVIRONMENT REFERENCE (PROVIDED) ---');
       contents.push('Analyze the architecture, environmental depth, lighting ambiance, vegetation, and spatial composition from this image to anchor the background scene.');
       contents.push(dataUrlToGenerativePart(locationReference.dataUrl, locationReference.mimeType));
     } else {
-      contents.push('--- REFERENCE 3: LOCATION / ENVIRONMENT REFERENCE ---');
+      contents.push('--- REFERENCE 4: LOCATION / ENVIRONMENT REFERENCE ---');
       contents.push('NOTE: No location reference was provided. Infer the environment exclusively from the user\'s creative description.');
     }
 

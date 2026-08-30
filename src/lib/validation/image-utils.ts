@@ -112,7 +112,7 @@ export async function processAndOptimizeImage(
  * Creates high-quality procedural sample images for 1-click testing
  */
 export function createSampleImage(
-  type: 'model' | 'fashion' | 'location' | 'video-source'
+  type: 'model' | 'fashion' | 'location' | 'video-source' | 'pose'
 ): ImageReference {
   const canvas = document.createElement('canvas');
   canvas.width = 600;
@@ -254,6 +254,78 @@ export function createSampleImage(
       dataUrl: canvas.toDataURL('image/jpeg', 0.9),
       mimeType: 'image/jpeg',
       size: 46000,
+    };
+  }
+
+  if (type === 'pose') {
+    const grad = ctx.createLinearGradient(0, 0, 600, 750);
+    grad.addColorStop(0, '#0f0f12');
+    grad.addColorStop(1, '#1a1a2e');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 600, 750);
+    ctx.strokeStyle = '#6366f1';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    // Head
+    ctx.beginPath();
+    ctx.arc(300, 140, 42, 0, Math.PI * 2);
+    ctx.stroke();
+    // Spine
+    ctx.beginPath();
+    ctx.moveTo(300, 182);
+    ctx.lineTo(300, 380);
+    ctx.stroke();
+    // Arms — elegant editorial pose
+    ctx.beginPath();
+    ctx.moveTo(300, 220);
+    ctx.lineTo(200, 300);
+    ctx.lineTo(170, 380);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(300, 220);
+    ctx.lineTo(400, 260);
+    ctx.lineTo(430, 180);
+    ctx.stroke();
+    // Legs — contrapposto
+    ctx.beginPath();
+    ctx.moveTo(300, 380);
+    ctx.lineTo(250, 520);
+    ctx.lineTo(240, 640);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(300, 380);
+    ctx.lineTo(350, 515);
+    ctx.lineTo(360, 640);
+    ctx.stroke();
+    // Joints
+    ctx.fillStyle = '#a5b4fc';
+    [[300,140],[300,220],[200,300],[170,380],[400,260],[430,180],[300,380],[250,520],[240,640],[350,515],[360,640]].forEach(([x,y])=>{
+      ctx.beginPath();
+      ctx.arc(x,y,7,0,Math.PI*2);
+      ctx.fill();
+    });
+    // Ground line
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(140, 640);
+    ctx.lineTo(460, 640);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('POSE: EDITORIAL STANCE', 300, 680);
+    ctx.font = '14px sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Skeletal Blueprint (Angles & Weight Distribution)', 300, 705);
+
+    return {
+      id: 'sample-pose',
+      name: 'editorial-pose-reference.jpg',
+      dataUrl: canvas.toDataURL('image/jpeg', 0.9),
+      mimeType: 'image/jpeg',
+      size: 44000,
     };
   }
 

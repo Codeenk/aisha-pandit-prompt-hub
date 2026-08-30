@@ -23,7 +23,7 @@ interface ReferenceUploadCardProps {
   isRequired?: boolean;
   value?: ImageReference | null;
   onChange: (image: ImageReference | null) => void;
-  sampleType?: 'model' | 'fashion' | 'location' | 'video-source';
+  sampleType?: 'model' | 'fashion' | 'location' | 'video-source' | 'pose';
   sampleLabel?: string;
   hasError?: boolean;
   errorMessage?: string;

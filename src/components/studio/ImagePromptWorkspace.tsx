@@ -30,9 +30,9 @@ export const ImagePromptWorkspace: React.FC<ImagePromptWorkspaceProps> = ({
   activePromptResponse,
   setActivePromptResponse,
 }) => {
-  // Reference States
   const [modelRef, setModelRef] = useState<ImageReference | null>(null);
   const [fashionRef, setFashionRef] = useState<ImageReference | null>(null);
+  const [poseRef, setPoseRef] = useState<ImageReference | null>(null);
   const [locationRef, setLocationRef] = useState<ImageReference | null>(null);
 
   // Creative Direction State
@@ -94,12 +94,13 @@ export const ImagePromptWorkspace: React.FC<ImagePromptWorkspaceProps> = ({
     setValidationErrors({});
 
     try {
-      const res = await fetch('/api/generate-image-prompt', {
+        const res = await fetch('/api/generate-image-prompt', {
         method: 'POST',
         headers: getCustomHeaders(),
         body: JSON.stringify({
           modelReference: modelRef,
           fashionReference: fashionRef,
+          poseReference: poseRef,
           locationReference: locationRef,
           creativeDirection,
           controls,
@@ -167,6 +168,7 @@ export const ImagePromptWorkspace: React.FC<ImagePromptWorkspaceProps> = ({
   const handleStartOver = () => {
     setModelRef(null);
     setFashionRef(null);
+    setPoseRef(null);
     setLocationRef(null);
     setCreativeDirection('');
     setActivePromptResponse(null);
@@ -211,7 +213,16 @@ export const ImagePromptWorkspace: React.FC<ImagePromptWorkspaceProps> = ({
             errorMessage={validationErrors.fashion}
           />
 
-          {/* Location Reference Card */}
+          <ReferenceUploadCard
+            label="Pose Reference"
+            description="Optional skeletal blueprint. Only body structure, angles & weight distribution are extracted — identity & outfit ignored."
+            isRequired={false}
+            value={poseRef}
+            onChange={setPoseRef}
+            sampleType="pose"
+            sampleLabel="Use Editorial Pose"
+          />
+
           <ReferenceUploadCard
             label="Location / Environment Reference"
             description="Optional scenery reference. If omitted, the environment is inferred exclusively from your description."
