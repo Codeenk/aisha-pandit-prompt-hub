@@ -1,4 +1,4 @@
-export type StudioMode = 'image' | 'video';
+export type StudioMode = 'image' | 'video' | 'motion';
 
 export interface ImageReference {
   id: string;
@@ -6,6 +6,24 @@ export interface ImageReference {
   dataUrl: string; // base64 data url
   mimeType: string;
   size: number;
+}
+
+export type MotionInputMode = 'video-upload' | 'manual-text';
+
+export type MotionTargetEngine =
+  | 'Auto (Veo 3.1 / Kling AI / Runway)'
+  | 'Google Veo 3.1 (Free via Google Vids / Morph Studio)'
+  | 'Kling AI (Free Daily Credits — Best Character Motion)'
+  | 'Runway Gen-3/4 (Free Tier — Kinetic Camera)'
+  | 'Hailuo / MiniMax AI (Free Tier — Cinematic Realism)'
+  | 'Viggle AI Mix (Free — Direct Video Character Swap)';
+
+export interface MotionTransferControls {
+  motionInputMode: MotionInputMode;
+  customWardrobe: string;
+  customEnvironment: string;
+  cinematographyStyle: string;
+  targetEngine: MotionTargetEngine;
 }
 
 export type CompositionOption =

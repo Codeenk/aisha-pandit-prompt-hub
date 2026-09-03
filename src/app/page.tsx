@@ -6,6 +6,7 @@ import { Header } from '@/components/navigation/Header';
 import { SettingsModal } from '@/components/navigation/SettingsModal';
 import { ImagePromptWorkspace } from '@/components/studio/ImagePromptWorkspace';
 import { VideoPromptWorkspace } from '@/components/studio/VideoPromptWorkspace';
+import { MotionTransferWorkspace } from '@/components/studio/MotionTransferWorkspace';
 import { PromptHistoryDrawer } from '@/components/history/PromptHistoryDrawer';
 import {
   loadHistory,
@@ -27,6 +28,8 @@ export default function PromptHubPage() {
   const [imagePromptResponse, setImagePromptResponse] =
     useState<PromptEngineResponse | null>(null);
   const [videoPromptResponse, setVideoPromptResponse] =
+    useState<PromptEngineResponse | null>(null);
+  const [motionPromptResponse, setMotionPromptResponse] =
     useState<PromptEngineResponse | null>(null);
 
   // API Status State
@@ -92,8 +95,10 @@ export default function PromptHubPage() {
 
     if (item.mode === 'image') {
       setImagePromptResponse(restoredResponse);
-    } else {
+    } else if (item.mode === 'video') {
       setVideoPromptResponse(restoredResponse);
+    } else {
+      setMotionPromptResponse(restoredResponse);
     }
   };
 
@@ -110,7 +115,11 @@ export default function PromptHubPage() {
   return (
     <div
       className={`min-h-screen flex flex-col transition-colors duration-500 ${
-        mode === 'image' ? 'studio-glow-image' : 'studio-glow-video'
+        mode === 'image'
+          ? 'studio-glow-image'
+          : mode === 'motion'
+          ? 'studio-glow-motion'
+          : 'studio-glow-video'
       }`}
     >
       {/* Top Navigation */}
@@ -133,7 +142,9 @@ export default function PromptHubPage() {
             </div>
             <p className="text-zinc-300">
               <span className="font-semibold text-zinc-100">AI Prompt Engineering Lab:</span>{' '}
-              This platform designs structured prompts for external generators (ChatGPT Images, Gemini Imagen, & Gemini Veo).
+              {mode === 'motion'
+                ? 'Motion Transfer mode — Extract skeletal motion from any video and fuse it with your AI influencer, custom wardrobe, and environment into a Veo 3.1 Master Prompt.'
+                : 'This platform designs structured prompts for external generators (ChatGPT Images, Gemini Imagen, & Gemini Veo).'}
             </p>
           </div>
 
@@ -154,6 +165,12 @@ export default function PromptHubPage() {
             onPromptGenerated={handlePromptGenerated}
             activePromptResponse={imagePromptResponse}
             setActivePromptResponse={setImagePromptResponse}
+          />
+        ) : mode === 'motion' ? (
+          <MotionTransferWorkspace
+            onPromptGenerated={handlePromptGenerated}
+            activePromptResponse={motionPromptResponse}
+            setActivePromptResponse={setMotionPromptResponse}
           />
         ) : (
           <VideoPromptWorkspace

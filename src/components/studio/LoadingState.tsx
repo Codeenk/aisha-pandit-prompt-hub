@@ -20,8 +20,14 @@ const VIDEO_STEPS = [
   { icon: Wand2, text: 'Engineering downstream video prompt...' },
 ];
 
+const MOTION_STEPS = [
+  { icon: Scan, text: 'Analyzing influencer identity...' },
+  { icon: BrainCircuit, text: 'Mapping skeletal motion choreography...' },
+  { icon: Wand2, text: 'Assembling 5-Part Veo 3.1 Master Formula...' },
+];
+
 export const LoadingState: React.FC<LoadingStateProps> = ({ mode }) => {
-  const steps = mode === 'image' ? IMAGE_STEPS : VIDEO_STEPS;
+  const steps = mode === 'image' ? IMAGE_STEPS : mode === 'motion' ? MOTION_STEPS : VIDEO_STEPS;
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {

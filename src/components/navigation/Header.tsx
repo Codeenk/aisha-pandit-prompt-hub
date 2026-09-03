@@ -9,6 +9,7 @@ import {
   History,
   Settings,
   Circle,
+  Scan,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -82,6 +83,18 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Film className="w-4 h-4" />
               <span>Video Prompt</span>
+            </button>
+            <button
+              onClick={() => onModeChange('motion')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                mode === 'motion'
+                  ? 'bg-gradient-to-r from-violet-600 to-pink-600 text-white shadow-md shadow-violet-600/30'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              }`}
+            >
+              <Scan className="w-4 h-4" />
+              <span className="hidden sm:inline">Motion Transfer</span>
+              <span className="sm:hidden">Motion</span>
             </button>
           </div>
 

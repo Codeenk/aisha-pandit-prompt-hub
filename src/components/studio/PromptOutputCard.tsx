@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Film,
   Image as ImageIcon,
+  Scan,
 } from 'lucide-react';
 
 interface PromptOutputCardProps {
@@ -56,21 +57,29 @@ export const PromptOutputCard: React.FC<PromptOutputCardProps> = ({
         <div className="w-16 h-16 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-4 shadow-xl">
           {mode === 'image' ? (
             <ImageIcon className="w-8 h-8 text-indigo-400/60" />
+          ) : mode === 'motion' ? (
+            <Scan className="w-8 h-8 text-violet-400/60" />
           ) : (
             <Film className="w-8 h-8 text-fuchsia-400/60" />
           )}
         </div>
         <h3 className="text-base font-bold text-zinc-200">
-          {mode === 'image' ? 'Image Prompt Laboratory' : 'Video Prompt Laboratory'}
+          {mode === 'image'
+            ? 'Image Prompt Laboratory'
+            : mode === 'motion'
+            ? 'Motion Transfer Laboratory'
+            : 'Video Prompt Laboratory'}
         </h3>
         <p className="text-xs text-zinc-400 max-w-sm mt-1.5 leading-relaxed">
           {mode === 'image'
             ? 'Upload your model and fashion references, describe what you want, and let the Prompt Hub engineer the rest.'
+            : mode === 'motion'
+            ? 'Extract skeletal motion choreography and map it onto your AI influencer with custom wardrobe and environment into a Veo 3.1 Master Prompt.'
             : 'Upload your final image and describe the movement, emotion, and choreography you want to create.'}
         </p>
         <div className="mt-6 flex items-center gap-2 text-[11px] text-zinc-400 bg-zinc-950/60 px-3 py-1.5 rounded-full border border-zinc-800/80">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Generates ready-to-use prompts for Imagen, ChatGPT & Veo</span>
+          <span>Generates ready-to-use prompts for Imagen, ChatGPT, Kling & Veo</span>
         </div>
       </div>
     );
@@ -91,13 +100,19 @@ export const PromptOutputCard: React.FC<PromptOutputCardProps> = ({
           <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 text-indigo-300 border border-indigo-500/30">
             {mode === 'image' ? (
               <ImageIcon className="w-4 h-4" />
+            ) : mode === 'motion' ? (
+              <Scan className="w-4 h-4 text-violet-300" />
             ) : (
               <Film className="w-4 h-4" />
             )}
           </div>
           <div>
             <h3 className="text-base font-bold text-zinc-100">
-              {mode === 'image' ? 'Generated Image Prompt' : 'Generated Video Prompt'}
+              {mode === 'image'
+                ? 'Generated Image Prompt'
+                : mode === 'motion'
+                ? 'Veo 3.1 / Kling Master Prompt'
+                : 'Generated Video Prompt'}
             </h3>
             <p className="text-xs text-zinc-400">
               Copy and paste directly into downstream generation tools
