@@ -68,6 +68,8 @@ export const MotionTransferWorkspace: React.FC<MotionTransferWorkspaceProps> = (
   setActivePromptResponse,
 }) => {
   const [influencerImage, setInfluencerImage] = useState<ImageReference | null>(null);
+  const [wardrobeImage, setWardrobeImage] = useState<ImageReference | null>(null);
+  const [environmentImage, setEnvironmentImage] = useState<ImageReference | null>(null);
   const [motionDescriptor, setMotionDescriptor] = useState('');
   const [controls, setControls] = useState<MotionTransferControls>(DEFAULT_CONTROLS);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -108,6 +110,12 @@ export const MotionTransferWorkspace: React.FC<MotionTransferWorkspaceProps> = (
           influencerImage: influencerImage
             ? { dataUrl: influencerImage.dataUrl, mimeType: influencerImage.mimeType }
             : null,
+          wardrobeImage: wardrobeImage
+            ? { dataUrl: wardrobeImage.dataUrl, mimeType: wardrobeImage.mimeType }
+            : null,
+          environmentImage: environmentImage
+            ? { dataUrl: environmentImage.dataUrl, mimeType: environmentImage.mimeType }
+            : null,
           motionDescriptor: motionDescriptor.trim(),
           customWardrobe: controls.customWardrobe,
           customEnvironment: controls.customEnvironment,
@@ -121,8 +129,9 @@ export const MotionTransferWorkspace: React.FC<MotionTransferWorkspaceProps> = (
       }
       const data: PromptEngineResponse = await res.json();
       setActivePromptResponse(data);
-      const thumb = influencerImage?.dataUrl
-        ? await createMicroThumbnail(influencerImage.dataUrl)
+      const primaryImage = influencerImage?.dataUrl || wardrobeImage?.dataUrl || environmentImage?.dataUrl;
+      const thumb = primaryImage
+        ? await createMicroThumbnail(primaryImage)
         : undefined;
       onPromptGenerated(data, motionDescriptor, thumb);
     } catch (err) {
@@ -153,8 +162,9 @@ export const MotionTransferWorkspace: React.FC<MotionTransferWorkspaceProps> = (
         throw new Error(data.error || `Failed to ${action} prompt.`);
       }
       setActivePromptResponse(data);
-      const thumb = influencerImage?.dataUrl
-        ? await createMicroThumbnail(influencerImage.dataUrl)
+      const primaryImage = influencerImage?.dataUrl || wardrobeImage?.dataUrl || environmentImage?.dataUrl;
+      const thumb = primaryImage
+        ? await createMicroThumbnail(primaryImage)
         : undefined;
       onPromptGenerated(data, motionDescriptor, thumb);
     } catch (err: unknown) {
@@ -170,6 +180,8 @@ export const MotionTransferWorkspace: React.FC<MotionTransferWorkspaceProps> = (
 
   const handleStartOver = () => {
     setInfluencerImage(null);
+    setWardrobeImage(null);
+    setEnvironmentImage(null);
     setMotionDescriptor('');
     setActivePromptResponse(null);
     setErrors({});
@@ -315,12 +327,28 @@ export const MotionTransferWorkspace: React.FC<MotionTransferWorkspaceProps> = (
           {showControls && (
             <div className="border-t border-zinc-800/60 p-4 space-y-4">
               {/* Wardrobe */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-300">Custom Wardrobe / Outfit</label>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-zinc-300">Custom Wardrobe / Outfit</label>
+                  <span className="text-[11px] text-zinc-500">Image Reference &amp; Styling</span>
+                </div>
+                <ReferenceUploadCard
+                  label="Wardrobe Reference Image (Optional)"
+                  description="Upload a garment, dress, or outfit lookbook image to clothe the character."
+                  isRequired={false}
+                  value={wardrobeImage}
+                  onChange={setWardrobeImage}
+                  sampleType="fashion"
+                  sampleLabel="Use Sample Outfit"
+                />
                 <textarea
                   value={controls.customWardrobe}
                   onChange={(e) => setControls((c) => ({ ...c, customWardrobe: e.target.value }))}
-                  placeholder="e.g. Holographic silver bomber jacket, matte black cropped top, cargo trousers…"
+                  placeholder={
+                    wardrobeImage
+                      ? "Optional: Add extra styling notes or color adjustments to the outfit above..."
+                      : "e.g. Holographic silver bomber jacket, matte black cropped top, cargo trousers…"
+                  }
                   rows={2}
                   className="w-full px-3 py-2 bg-zinc-950/60 border border-zinc-800 rounded-xl text-xs text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-violet-500"
                 />
@@ -339,12 +367,28 @@ export const MotionTransferWorkspace: React.FC<MotionTransferWorkspaceProps> = (
               </div>
 
               {/* Environment */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-300">Custom Environment / Location</label>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-zinc-300">Custom Environment / Location</label>
+                  <span className="text-[11px] text-zinc-500">Image Reference &amp; Atmosphere</span>
+                </div>
+                <ReferenceUploadCard
+                  label="Environment Reference Image (Optional)"
+                  description="Upload an architecture, setting, or room image for the scene."
+                  isRequired={false}
+                  value={environmentImage}
+                  onChange={setEnvironmentImage}
+                  sampleType="location"
+                  sampleLabel="Use Sample Location"
+                />
                 <textarea
                   value={controls.customEnvironment}
                   onChange={(e) => setControls((c) => ({ ...c, customEnvironment: e.target.value }))}
-                  placeholder="e.g. Minimalist Tokyo showroom at twilight, cyber-blue ambient strip lighting…"
+                  placeholder={
+                    environmentImage
+                      ? "Optional: Add atmosphere, lighting, or background depth notes for the setting above..."
+                      : "e.g. Minimalist Tokyo showroom at twilight, cyber-blue ambient strip lighting…"
+                  }
                   rows={2}
                   className="w-full px-3 py-2 bg-zinc-950/60 border border-zinc-800 rounded-xl text-xs text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-violet-500"
                 />

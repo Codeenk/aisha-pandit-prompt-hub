@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       influencerImage,
+      wardrobeImage,
+      environmentImage,
       motionDescriptor,
       customWardrobe,
       customEnvironment,
@@ -32,6 +34,8 @@ export async function POST(req: NextRequest) {
       targetEngine,
     } = body as {
       influencerImage?: { dataUrl: string; mimeType: string };
+      wardrobeImage?: { dataUrl: string; mimeType: string };
+      environmentImage?: { dataUrl: string; mimeType: string };
       motionDescriptor: string;
       customWardrobe: string;
       customEnvironment: string;
@@ -52,6 +56,20 @@ export async function POST(req: NextRequest) {
       contents.push(dataUrlToGenerativePart(influencerImage.dataUrl, influencerImage.mimeType));
     }
 
+    if (wardrobeImage?.dataUrl) {
+      contents.push(
+        'This is the custom wardrobe / outfit reference image. Extract and preserve the exact garment silhouette, fabrics, textures, color palette, and styling details to clothe the character in.'
+      );
+      contents.push(dataUrlToGenerativePart(wardrobeImage.dataUrl, wardrobeImage.mimeType));
+    }
+
+    if (environmentImage?.dataUrl) {
+      contents.push(
+        'This is the custom environment / location reference image. Extract and reflect the architectural setting, spatial lighting, textures, materials, and ambient background into the generated prompt.'
+      );
+      contents.push(dataUrlToGenerativePart(environmentImage.dataUrl, environmentImage.mimeType));
+    }
+
     contents.push(`
 BUILD A VEO 3.1 MASTER PROMPT using the 5-Part Master Formula:
 
@@ -59,13 +77,23 @@ BUILD A VEO 3.1 MASTER PROMPT using the 5-Part Master Formula:
 ${influencerImage ? 'Derived from the uploaded character reference image above.' : 'A photorealistic AI fashion model with symmetrical features, natural skin texture, and a radiant natural expression.'}
 
 [PART 2 — CUSTOM WARDROBE]
-${customWardrobe.trim() || 'Stylish contemporary high-fashion outfit appropriate to the motion and environment.'}
+${
+  wardrobeImage
+    ? 'Derived precisely from the custom fashion / wardrobe reference image provided above' +
+      (customWardrobe?.trim() ? `, with additional creative direction: "${customWardrobe.trim()}".` : '.')
+    : customWardrobe?.trim() || 'Stylish contemporary high-fashion outfit appropriate to the motion and environment.'
+}
 
 [PART 3 — SKELETAL MOTION DESCRIPTOR]
 ${motionDescriptor.trim()}
 
 [PART 4 — CUSTOM ENVIRONMENT]
-${customEnvironment.trim() || 'A minimalist luminous architectural showroom with warm ambient lighting.'}
+${
+  environmentImage
+    ? 'Derived precisely from the custom environment / location reference image provided above' +
+      (customEnvironment?.trim() ? `, with additional atmosphere notes: "${customEnvironment.trim()}".` : '.')
+    : customEnvironment?.trim() || 'A minimalist luminous architectural showroom with warm ambient lighting.'
+}
 
 [PART 5 — CINEMATOGRAPHY & LIGHTING STYLE]
 ${cinematographyStyle.trim() || 'Ultra-realistic 4K, anamorphic cinematic lens, smooth tracking camera, natural volumetric lighting.'}
